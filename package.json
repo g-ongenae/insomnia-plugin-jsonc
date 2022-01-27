@@ -1,0 +1,38 @@
+{
+  "name": "insomnia-plugin-jsonc",
+  "version": "0.1.0",
+  "description": "Insomnia plugin to use comments in JSON body",
+  "main": "main.js",
+  "insomnia": {
+    "name": "jsonc",
+    "displayName": "JSON Comments Plugin",
+    "description": "Plugin to use comments in JSON body.",
+    "publisher": {
+      "name": "Guillaume Ongenae",
+      "icon": "https://avatars.githubusercontent.com/u/9453090"
+    },
+    "unlisted": false
+  },
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/algoan/insomnia-plugin-jsonc.git"
+  },
+  "keywords": [
+    "insomnia",
+    "plugin",
+    "jsonc",
+    "json-comments",
+    "comments"
+  ],
+  "author": "Guillaume Ongenae <guillaume.ongenae@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/g-ongenae/insomnia-plugin-jsonc/issues"
+  },
+  "homepage": "https://github.com/g-ongenae/insomnia-plugin-jsonc#readme",
+  "dependencies": {},
+  "devDependencies": {}
+}
