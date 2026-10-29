@@ -2,6 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fc = require('fast-check');
 const { requestHooks } = require('./main');
+const { stripJSONComments } = require('./strip');
 
 /**
  * Run the hook on a fake insomnia context
@@ -67,9 +68,8 @@ test('should strip comments inserted in any JSON document', { todo: 'fails on es
         })
         .join('\n');
 
-      const [body] = runHook({ mimeType: 'application/json', text });
       // Compare with the parsed original rather than `value`, since -0 does not survive JSON
-      assert.deepEqual(JSON.parse(body.text), JSON.parse(json));
+      assert.deepEqual(JSON.parse(stripJSONComments(text)), JSON.parse(json));
     }),
   );
 });
