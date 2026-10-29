@@ -51,11 +51,11 @@ The regex is quadratic on unterminated block comments: each `/*` is searched unt
 
 On a JSONC body containing a Windows path ending with an escaped backslash (`"C:\\dir\\"`), the fadlan scanner loses track of strings and its output no longer parses. It also keeps a trailing comma followed by a comment (`[1, // c\n]`). The two other implementations handle both.
 
-On 1,000,000 random short inputs, `strip.js` and the regex give the same output whenever the regex output is valid JSON. They only differ on unterminated strings, which are invalid JSON either way.
+A property test in [`test.js`](../test.js) compares `strip.js` with the regex on random short inputs, including every JavaScript line terminator (`\n`, `\r`, `\u2028`, `\u2029`). They give the same output whenever the regex output is valid JSON, except on one kind of invalid input: a backslash before a line terminator inside a string. There the regex no longer sees the string and may strip comment-like content from it, while `strip.js` leaves the string untouched. Otherwise they only differ on unterminated strings, which are invalid JSON either way.
 
 ## Why `strip.js` is faster
 
-- Strings and comments are skipped with `indexOf`, which is native and much faster than a JavaScript loop.
+- Strings and block comments are skipped with `indexOf`, which is native and much faster than a JavaScript loop.
 - Kept text is copied by slices joined once at the end, not character by character.
 - Comments and trailing commas are removed in a single pass, with no intermediate string.
 - A body with nothing to strip is returned as is, without any allocation.
