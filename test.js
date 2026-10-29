@@ -41,3 +41,10 @@ for (const [name, givenBody, expectedBody] of cases) {
     assert.equal(calls[0].text, expectedBody.text);
   });
 }
+
+test('should keep comment-like content in a string after an escaped backslash', { todo: 'fixed by the new regex' }, () => {
+  const text = String.raw`{"a": "x\\", "b": "// y"}`;
+  const [body] = runHook({ mimeType: 'application/json', text });
+  assert.equal(body.text, text);
+  assert.deepEqual(JSON.parse(body.text), { a: 'x\\', b: '// y' });
+});
