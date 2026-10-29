@@ -1,12 +1,12 @@
 {
   "name": "insomnia-plugin-jsonc",
   "version": "0.1.0",
-  "description": "Insomnia plugin to use comments in JSON body",
+  "description": "Insomnia plugin to strip JSON body comments",
   "main": "main.js",
   "insomnia": {
     "name": "jsonc",
     "displayName": "JSON Comments Plugin",
-    "description": "Plugin to use comments in JSON body.",
+    "description": "Strips comments from JSON request bodies.",
     "publisher": {
       "name": "Guillaume Ongenae",
       "icon": "https://avatars.githubusercontent.com/u/9453090"
