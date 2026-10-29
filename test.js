@@ -31,10 +31,15 @@ const cases = [
   ['should remove leading block comment', { mimeType: 'application/json', text: '/* hello */ {"foo": "bar"}' }, { mimeType: 'application/json', text: ' {"foo": "bar"}' }],
   ['should remove line comment after the last item', { mimeType: 'application/json', text: '{"a": 1 // last\n}' }, { mimeType: 'application/json', text: '{"a": 1 \n}' }],
   ['should remove line comment', { mimeType: 'application/json', text: '{"foo": "bar" // hello\n }' }, { mimeType: 'application/json', text: '{"foo": "bar" \n }' }],
+  ['should handle JSON MIME type with parameters', { mimeType: 'application/json; charset=utf-8', text: '{"a": 1 /* b */}' }, { mimeType: 'application/json; charset=utf-8', text: '{"a": 1 }' }],
+  ['should handle JSON MIME type case-insensitively', { mimeType: 'Application/JSON', text: '{"a": 1 /* b */}' }, { mimeType: 'Application/JSON', text: '{"a": 1 }' }],
+  ['should handle +json MIME types', { mimeType: 'application/vnd.api+json', text: '{"a": 1 /* b */}' }, { mimeType: 'application/vnd.api+json', text: '{"a": 1 }' }],
 ];
 
 test('should not call setBody on non JSON body', () => {
   assert.deepEqual(runHook({ mimeType: 'non-json', text: 'foo // bar' }), []);
+  assert.deepEqual(runHook({ mimeType: 'application/jsonp', text: 'foo // bar' }), []);
+  assert.deepEqual(runHook({ text: 'foo // bar' }), []);
 });
 
 test('should not throw nor call setBody on empty JSON body', () => {
