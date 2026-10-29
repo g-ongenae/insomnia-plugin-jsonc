@@ -22,7 +22,6 @@ const runHook = (givenBody) => {
  * List of test cases: [name, given body, expected body]
  */
 const cases = [
-  ['should not alter non JSON body', { mimeType: 'non-json', text: 'foo' }, { mimeType: 'non-json', text: 'foo' }],
   ['should not alter invalid JSON body without comments', { mimeType: 'application/json', text: 'foo' }, { mimeType: 'application/json', text: 'foo' }],
   ['should not alter JSON body without comments', { mimeType: 'application/json', text: '{"foo": "bar"}' }, { mimeType: 'application/json', text: '{"foo": "bar"}' }],
   // Spaces around comments are preserved
@@ -31,9 +30,14 @@ const cases = [
   ['should remove line comment', { mimeType: 'application/json', text: '{"foo": "bar" // hello\n }' }, { mimeType: 'application/json', text: '{"foo": "bar" \n }' }],
 ];
 
+test('should not call setBody on non JSON body', () => {
+  assert.deepEqual(runHook({ mimeType: 'non-json', text: 'foo // bar' }), []);
+});
+
 for (const [name, givenBody, expectedBody] of cases) {
   test(name, () => {
-    const [actualBody = givenBody] = runHook(givenBody);
-    assert.equal(actualBody.text, expectedBody.text);
+    const calls = runHook(givenBody);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].text, expectedBody.text);
   });
 }
