@@ -37,6 +37,10 @@ test('should not call setBody on non JSON body', () => {
   assert.deepEqual(runHook({ mimeType: 'non-json', text: 'foo // bar' }), []);
 });
 
+test('should not throw nor call setBody on empty JSON body', () => {
+  assert.deepEqual(runHook({ mimeType: 'application/json' }), []);
+});
+
 for (const [name, givenBody, expectedBody] of cases) {
   test(name, () => {
     const calls = runHook(givenBody);

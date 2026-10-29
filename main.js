@@ -12,7 +12,8 @@ const CONTENT_TYPE_JSON = "application/json";
  */
 const updateRequestBodyHook = (context) => {
   const body = context.request.getBody();
-  if (body.mimeType === CONTENT_TYPE_JSON) {
+  // `text` is undefined on an empty body
+  if (body.mimeType === CONTENT_TYPE_JSON && typeof body.text === "string") {
     context.request.setBody({
       ...body,
       text: stripJSONComments(body.text),
