@@ -33,6 +33,7 @@
     "url": "https://github.com/g-ongenae/insomnia-plugin-jsonc/issues"
   },
   "homepage": "https://github.com/g-ongenae/insomnia-plugin-jsonc#readme",
-  "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "fast-check": "^4.10.2"
+  }
 }

@@ -1,5 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fc = require('fast-check');
 const { requestHooks } = require('./main');
 
 /**
@@ -48,4 +49,27 @@ test('should keep comment-like content in a string after an escaped backslash', 
   const [body] = runHook({ mimeType: 'application/json', text });
   assert.equal(body.text, text);
   assert.deepEqual(JSON.parse(body.text), { a: 'x\\', b: '// y' });
+});
+
+test('should strip comments inserted in any JSON document', { todo: 'fails on escaped backslashes until the regex is fixed' }, () => {
+  const comment = fc.string({ unit: 'grapheme-ascii' }).filter((c) => !c.includes('*/'));
+  const lineComments = fc.array(fc.record({ block: fc.option(comment), line: fc.option(comment) }));
+
+  fc.assert(
+    fc.property(fc.jsonValue(), lineComments, (value, comments) => {
+      // JSON.stringify escapes newlines in strings, so each line starts and ends on a token boundary
+      const json = JSON.stringify(value, null, 2);
+      const text = json
+        .split('\n')
+        .map((line, i) => {
+          const { block = null, line: lineComment = null } = comments[i] ?? {};
+          return `${block === null ? '' : `/*${block}*/`}${line}${lineComment === null ? '' : `//${lineComment}`}`;
+        })
+        .join('\n');
+
+      const [body] = runHook({ mimeType: 'application/json', text });
+      // Compare with the parsed original rather than `value`, since -0 does not survive JSON
+      assert.deepEqual(JSON.parse(body.text), JSON.parse(json));
+    }),
+  );
 });
