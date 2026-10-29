@@ -13,4 +13,4 @@ Just write valid JavaScript comments in JSON body request and send your request 
 
 ## Deps
 
-Use [`json-easy-strip`](https://www.npmjs.com/package/json-easy-strip)'s RegExp to strip comments.
+Uses a RegExp adapted from [`json-easy-strip`](https://www.npmjs.com/package/json-easy-strip) to strip comments.

@@ -45,14 +45,14 @@ for (const [name, givenBody, expectedBody] of cases) {
   });
 }
 
-test('should keep comment-like content in a string after an escaped backslash', { todo: 'fixed by the new regex' }, () => {
+test('should keep comment-like content in a string after an escaped backslash', () => {
   const text = String.raw`{"a": "x\\", "b": "// y"}`;
   const [body] = runHook({ mimeType: 'application/json', text });
   assert.equal(body.text, text);
   assert.deepEqual(JSON.parse(body.text), { a: 'x\\', b: '// y' });
 });
 
-test('should strip comments inserted in any JSON document', { todo: 'fails on escaped backslashes until the regex is fixed' }, () => {
+test('should strip comments inserted in any JSON document', () => {
   const comment = fc.string({ unit: 'grapheme-ascii' }).filter((c) => !c.includes('*/'));
   const lineComments = fc.array(fc.record({ block: fc.option(comment), line: fc.option(comment) }));
 
