@@ -39,6 +39,12 @@ const cases = [
   ['should handle JSON MIME type with parameters', { mimeType: 'application/json; charset=utf-8', text: '{"a": 1 /* b */}' }, { mimeType: 'application/json; charset=utf-8', text: '{"a": 1 }' }],
   ['should handle JSON MIME type case-insensitively', { mimeType: 'Application/JSON', text: '{"a": 1 /* b */}' }, { mimeType: 'Application/JSON', text: '{"a": 1 }' }],
   ['should handle +json MIME types', { mimeType: 'application/vnd.api+json', text: '{"a": 1 /* b */}' }, { mimeType: 'application/vnd.api+json', text: '{"a": 1 }' }],
+  ['should strip comments in an array body', { mimeType: 'application/json', text: '[1, // c\n 2]' }, { mimeType: 'application/json', text: '[1, \n 2]' }],
+  ['should keep a comma followed by a comment and a value', { mimeType: 'application/json', text: '[1, /* x */ 2]' }, { mimeType: 'application/json', text: '[1,  2]' }],
+  ['should remove nested trailing commas', { mimeType: 'application/json', text: '[[1,],{"a": [],},]' }, { mimeType: 'application/json', text: '[[1],{"a": []}]' }],
+  ['should remove a trailing comma between two comments', { mimeType: 'application/json', text: '[1/* a */,// b\n]' }, { mimeType: 'application/json', text: '[1\n]' }],
+  ['should keep an unterminated block comment', { mimeType: 'application/json', text: '{"a": 1 /* b' }, { mimeType: 'application/json', text: '{"a": 1 /* b' }],
+  ['should keep comment-like content after an escaped quote', { mimeType: 'application/json', text: String.raw`{"a": "\" // b", "c": "\\\" /* d */"}` }, { mimeType: 'application/json', text: String.raw`{"a": "\" // b", "c": "\\\" /* d */"}` }],
 ];
 
 test('should not call setBody on non JSON body', () => {
@@ -64,6 +70,18 @@ test('should keep comment-like content in a string after an escaped backslash', 
   const [body] = runHook({ mimeType: 'application/json', text });
   assert.equal(body.text, text);
   assert.deepEqual(JSON.parse(body.text), { a: 'x\\', b: '// y' });
+});
+
+test('should keep a Windows path ending with an escaped backslash', () => {
+  const text = String.raw`{"path": "C:\\dir\\", "url": "http://x", "tags": ["a",]}`;
+  const [body] = runHook({ mimeType: 'application/json', text });
+  assert.deepEqual(JSON.parse(body.text), { path: 'C:\\dir\\', url: 'http://x', tags: ['a'] });
+});
+
+test('should keep comment-like content in a long string', () => {
+  const text = JSON.stringify({ blob: `${'x'.repeat(1 << 16)} // y /* z */,]` });
+  const [body] = runHook({ mimeType: 'application/json', text });
+  assert.equal(body.text, text);
 });
 
 test('should strip comments and trailing commas inserted in any JSON document', () => {
