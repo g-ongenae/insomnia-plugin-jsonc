@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-jsonc",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Insomnia plugin to strip JSON body comments",
   "main": "main.js",
   "insomnia": {
