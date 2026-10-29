@@ -7,6 +7,10 @@
     "name": "jsonc",
     "displayName": "JSON Comments Plugin",
     "description": "Strips comments from JSON request bodies.",
+    "images": {
+      "icon": "icon.svg",
+      "cover": "cover.svg"
+    },
     "publisher": {
       "name": "Guillaume Ongenae",
       "icon": "https://avatars.githubusercontent.com/u/9453090"

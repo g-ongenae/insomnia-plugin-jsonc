@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4000BF"/>
+      <stop offset="1" stop-color="#2A0080"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="400" fill="url(#bg)"/>
+  <!-- { } logo -->
+  <g transform="translate(80 72) scale(0.5)">
+    <g fill="none" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M176 112h-16c-24 0-40 16-40 40v56c0 24-16 48-40 48 24 0 40 24 40 48v56c0 24 16 40 40 40h16"/>
+      <path d="M336 112h16c24 0 40 16 40 40v56c0 24 16 48 40 48-24 0-40 24-40 48v56c0 24-16 40-40 40h-16"/>
+    </g>
+    <g stroke="#B794FF" stroke-width="28" stroke-linecap="round">
+      <path d="M196 312l40-112"/>
+      <path d="M276 312l40-112"/>
+    </g>
+  </g>
+  <g font-family="Menlo, Consolas, 'DejaVu Sans Mono', monospace">
+    <text x="400" y="190" font-size="64" font-weight="bold" fill="#FFFFFF">JSON Comments</text>
+    <text x="400" y="250" font-size="30" fill="#D9C7FF">Strips comments from JSON request bodies.</text>
+    <!-- before → after -->
+    <text x="400" y="318" font-size="24" fill="#FFFFFF">{"a": 1<tspan fill="#B794FF" text-decoration="line-through">, /* note */</tspan>}</text>
+    <text x="720" y="318" font-size="24" fill="#B794FF">→</text>
+    <text x="770" y="318" font-size="24" fill="#FFFFFF">{"a": 1}</text>
+  </g>
+</svg>
