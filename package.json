@@ -25,7 +25,8 @@
   },
   "scripts": {
     "test": "node --test test.js",
-    "prepublishOnly": "npm test"
+    "prepublishOnly": "npm test",
+    "format": "npx prettier@3 --write ."
   },
   "repository": {
     "type": "git",

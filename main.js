@@ -14,7 +14,10 @@ const CONTENT_TYPE_JSON = "application/json";
  * @returns whether the MIME type is JSON
  */
 const isJSONMimeType = (mimeType) => {
-  const type = String(mimeType ?? "").split(";")[0].trim().toLowerCase();
+  const type = String(mimeType ?? "")
+    .split(";")[0]
+    .trim()
+    .toLowerCase();
   return type === CONTENT_TYPE_JSON || type.endsWith("+json");
 };
 

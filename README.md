@@ -6,6 +6,7 @@ Write comments and trailing commas in your JSON request bodies. They are strippe
 
 What you write in Insomnia:
 
+<!-- prettier-ignore -->
 ```jsonc
 {
   "page": 1, // current page

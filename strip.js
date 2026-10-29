@@ -12,7 +12,7 @@
  */
 const stripJSONComments = (data) =>
   data.replace(/"(?:\\.|[^"\\])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) =>
-    g ? "" : m
+    g ? "" : m,
   );
 
 /**
@@ -26,7 +26,7 @@ const stripJSONComments = (data) =>
  */
 const stripTrailingCommas = (data) =>
   data.replace(/"(?:\\.|[^"\\])*"|,(\s*[\]}])/g, (m, g) =>
-    g === undefined ? m : g
+    g === undefined ? m : g,
   );
 
 /**
