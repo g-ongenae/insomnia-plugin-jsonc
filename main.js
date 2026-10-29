@@ -1,4 +1,4 @@
-const { stripJSONComments } = require("./strip");
+const { stripJSONC } = require("./strip");
 
 /**
  * JSON Content-Type
@@ -19,7 +19,7 @@ const isJSONMimeType = (mimeType) => {
 };
 
 /**
- * Hook to update request body and remove comments
+ * Hook to update request body and remove comments and trailing commas
  * @param context insomnia request context
  * @link https://docs.insomnia.rest/insomnia/context-object-reference
  */
@@ -29,7 +29,7 @@ const updateRequestBodyHook = (context) => {
   if (isJSONMimeType(body.mimeType) && typeof body.text === "string") {
     context.request.setBody({
       ...body,
-      text: stripJSONComments(body.text),
+      text: stripJSONC(body.text),
     });
   }
 };

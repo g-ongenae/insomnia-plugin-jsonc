@@ -11,6 +11,8 @@ Strip JSON comments from your request body.
 
 Just write valid JavaScript comments in JSON body request and send your request without minding them.
 
+Trailing commas in arrays and objects are removed as well.
+
 ## Deps
 
 Uses a RegExp adapted from [`json-easy-strip`](https://www.npmjs.com/package/json-easy-strip) to strip comments.
