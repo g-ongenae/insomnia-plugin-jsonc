@@ -1,44 +1,39 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
 const { requestHooks } = require('./main');
 
 /**
- * Create a fake insomnia context with a validation on the setBody
- * @param {object} givenBody
- * @param {object} expectedBody
- * @returns a fake insomnia context with a validation
+ * Run the hook on a fake insomnia context
+ * @param {object} givenBody the body returned by getBody
+ * @returns the list of bodies passed to setBody
  */
-const fakeContext = (id, givenBody, expectedBody) => {
-  return {
+const runHook = (givenBody) => {
+  const calls = [];
+  requestHooks[0]({
     request: {
       getBody: () => givenBody,
-      setBody: (actualBody) => {
-        const result = actualBody.text === expectedBody.text
-          ? `${id} | passed`
-          : `${id} | expected: '${expectedBody.text}' => received: '${actualBody.text}'`;
-
-        console.log(result);
-      },
-    }
-  };
+      setBody: (body) => calls.push(body),
+    },
+  });
+  return calls;
 };
 
 /**
- * List of test cases
+ * List of test cases: [name, given body, expected body]
  */
 const cases = [
-  // Should not alter non JSON body
-  [{ mimeType: 'non-json', text: 'foo' }, { mimeType: 'non-json', text: 'foo' }],
-  // Should not alter JSON body without comments
-  [{ mimeType: 'application/json', text: 'foo' }, { mimeType: 'application/json', text: 'foo' }],
-  [{ mimeType: 'application/json', text: '{"foo": "bar"}' }, { mimeType: 'application/json', text: '{"foo": "bar"}' }],
-  // Should remove comments from JSON body (space are preserved)
-  [{ mimeType: 'application/json', text: '{"foo": /* hello */ "bar"}' }, { mimeType: 'application/json', text: '{"foo":  "bar"}' }],
-  [{ mimeType: 'application/json', text: '/* hello */ {"foo": "bar"}' }, { mimeType: 'application/json', text: ' {"foo": "bar"}' }],
-  [{ mimeType: 'application/json', text: '{"foo": "bar" // hello\n }' }, { mimeType: 'application/json', text: '{"foo": "bar" \n }' }],
+  ['should not alter non JSON body', { mimeType: 'non-json', text: 'foo' }, { mimeType: 'non-json', text: 'foo' }],
+  ['should not alter invalid JSON body without comments', { mimeType: 'application/json', text: 'foo' }, { mimeType: 'application/json', text: 'foo' }],
+  ['should not alter JSON body without comments', { mimeType: 'application/json', text: '{"foo": "bar"}' }, { mimeType: 'application/json', text: '{"foo": "bar"}' }],
+  // Spaces around comments are preserved
+  ['should remove inline block comment', { mimeType: 'application/json', text: '{"foo": /* hello */ "bar"}' }, { mimeType: 'application/json', text: '{"foo":  "bar"}' }],
+  ['should remove leading block comment', { mimeType: 'application/json', text: '/* hello */ {"foo": "bar"}' }, { mimeType: 'application/json', text: ' {"foo": "bar"}' }],
+  ['should remove line comment', { mimeType: 'application/json', text: '{"foo": "bar" // hello\n }' }, { mimeType: 'application/json', text: '{"foo": "bar" \n }' }],
 ];
 
-/**
- * Call and test the hook
- */
-for (const [index, test] of Object.entries(cases)) {
-  requestHooks[0](fakeContext(index, ...test));
+for (const [name, givenBody, expectedBody] of cases) {
+  test(name, () => {
+    const [actualBody = givenBody] = runHook(givenBody);
+    assert.equal(actualBody.text, expectedBody.text);
+  });
 }
