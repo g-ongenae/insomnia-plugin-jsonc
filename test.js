@@ -86,7 +86,11 @@ test('should keep comment-like content in a long string', () => {
 
 test('should strip comments and trailing commas inserted in any JSON document', () => {
   const comment = fc.string({ unit: 'grapheme-ascii' }).filter((c) => !c.includes('*/'));
-  const lineComments = fc.array(fc.record({ block: fc.option(comment), line: fc.option(comment), trailingComma: fc.boolean() }));
+  // Block comments can span several lines
+  const blockComment = fc.array(comment, { maxLength: 3 }).map((lines) => lines.join('\n'));
+  const lineComments = fc.array(
+    fc.record({ block: fc.option(blockComment), beforeComma: fc.option(blockComment), line: fc.option(comment), trailingComma: fc.boolean() }),
+  );
 
   fc.assert(
     fc.property(fc.jsonValue(), lineComments, (value, comments) => {
@@ -95,11 +99,16 @@ test('should strip comments and trailing commas inserted in any JSON document', 
       const text = json
         .split('\n')
         .map((line, i, lines) => {
-          const { block = null, line: lineComment = null, trailingComma = false } = comments[i] ?? {};
+          const { block = null, beforeComma = null, line: lineComment = null, trailingComma = false } = comments[i] ?? {};
           // A trailing comma is allowed after the last value of a non-empty array or object
           const isLastValue = /^\s*[\]}]/.test(lines[i + 1] ?? '') && !/[[{]$/.test(line);
-          const comma = trailingComma && isLastValue ? ',' : '';
-          return `${block === null ? '' : `/*${block}*/`}${line}${comma}${lineComment === null ? '' : `//${lineComment}`}`;
+          // A line ending with a comma ends with a separator, since strings end with a quote
+          const hasComma = line.endsWith(',');
+          const content = hasComma ? line.slice(0, -1) : line;
+          const comma = hasComma || (trailingComma && isLastValue) ? ',' : '';
+          // Insert the comment between the value and its comma, as in `1 /* x */,`
+          const commentBeforeComma = comma && beforeComma !== null ? `/*${beforeComma}*/` : '';
+          return `${block === null ? '' : `/*${block}*/`}${content}${commentBeforeComma}${comma}${lineComment === null ? '' : `//${lineComment}`}`;
         })
         .join('\n');
 
