@@ -131,6 +131,17 @@ const cases = [
       text: String.raw`{"a": "\" // b", "c": "\\\" /* d */"}`,
     },
   ],
+  // A line comment ends at any JavaScript line terminator, which is kept
+  ...[
+    ["\\r", "\r"],
+    ["\\r\\n", "\r\n"],
+    ["\\u2028", "\u2028"],
+    ["\\u2029", "\u2029"],
+  ].map(([name, terminator]) => [
+    `should end a line comment at ${name}`,
+    { mimeType: "application/json", text: `[1, // c${terminator}2]` },
+    { mimeType: "application/json", text: `[1, ${terminator}2]` },
+  ]),
 ];
 
 test("should not call setBody on non JSON body", () => {

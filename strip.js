@@ -15,6 +15,32 @@ const isWhitespace = (code) =>
   code === 32 || code === 10 || code === 13 || code === 9;
 
 /**
+ * Check if a character code ends a line comment
+ *
+ * Same line terminators as JavaScript, which `.` does not match in the previous regex.
+ *
+ * @param code the character code
+ * @returns whether it is `\n`, `\r`, `\u2028` or `\u2029`
+ */
+const isLineTerminator = (code) =>
+  code === 10 || code === 13 || code === 0x2028 || code === 0x2029;
+
+/**
+ * Find the end of the line comment opening at `start`
+ *
+ * The line terminator is kept, so that the line structure is preserved.
+ *
+ * @param data the JSONC string
+ * @param start the index of the comment's first slash
+ * @returns the index of the line terminator, or the length of the string
+ */
+const skipLineComment = (data, start) => {
+  let i = start + 2;
+  while (i < data.length && !isLineTerminator(data.charCodeAt(i))) i++;
+  return i;
+};
+
+/**
  * Find the end of the string opening at `start`
  *
  * A quote preceded by an odd number of backslashes is escaped, so `"C:\\"` ends on its last quote.
@@ -82,8 +108,7 @@ const stripJSONC = (data) => {
     } else if (code === SLASH && data.charCodeAt(i + 1) === SLASH) {
       detachComma();
       flush(i);
-      const lineFeed = data.indexOf("\n", i + 2);
-      i = start = lineFeed === -1 ? length : lineFeed;
+      i = start = skipLineComment(data, i);
     } else if (
       code === SLASH &&
       data.charCodeAt(i + 1) === STAR &&
