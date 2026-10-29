@@ -27,6 +27,7 @@ const cases = [
   // Spaces around comments are preserved
   ['should remove inline block comment', { mimeType: 'application/json', text: '{"foo": /* hello */ "bar"}' }, { mimeType: 'application/json', text: '{"foo":  "bar"}' }],
   ['should remove leading block comment', { mimeType: 'application/json', text: '/* hello */ {"foo": "bar"}' }, { mimeType: 'application/json', text: ' {"foo": "bar"}' }],
+  ['should remove line comment after the last item', { mimeType: 'application/json', text: '{"a": 1 // last\n}' }, { mimeType: 'application/json', text: '{"a": 1 \n}' }],
   ['should remove line comment', { mimeType: 'application/json', text: '{"foo": "bar" // hello\n }' }, { mimeType: 'application/json', text: '{"foo": "bar" \n }' }],
 ];
 
