@@ -3,6 +3,12 @@
   "version": "0.2.0",
   "description": "Insomnia plugin to strip JSON body comments",
   "main": "main.js",
+  "files": [
+    "main.js",
+    "strip.js",
+    "icon.svg",
+    "cover.svg"
+  ],
   "insomnia": {
     "name": "jsonc",
     "displayName": "JSON Comments Plugin",
