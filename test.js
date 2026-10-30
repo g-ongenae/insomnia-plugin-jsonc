@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const fc = require("fast-check");
 const { requestHooks } = require("./main");
 const { stripJSONC } = require("./strip");
+const { stripJSONC: stripJSONCWithRegex } = require("./bench/regex");
 
 /**
  * Run the hook on a fake insomnia context
@@ -131,6 +132,17 @@ const cases = [
       text: String.raw`{"a": "\" // b", "c": "\\\" /* d */"}`,
     },
   ],
+  // A line comment ends at any JavaScript line terminator, which is kept
+  ...[
+    ["\\r", "\r"],
+    ["\\r\\n", "\r\n"],
+    ["\\u2028", "\u2028"],
+    ["\\u2029", "\u2029"],
+  ].map(([name, terminator]) => [
+    `should end a line comment at ${name}`,
+    { mimeType: "application/json", text: `[1, // c${terminator}2]` },
+    { mimeType: "application/json", text: `[1, ${terminator}2]` },
+  ]),
 ];
 
 test("should not call setBody on non JSON body", () => {
@@ -226,5 +238,26 @@ test("should strip comments and trailing commas inserted in any JSON document", 
       // Compare with the parsed original rather than `value`, since -0 does not survive JSON
       assert.deepEqual(JSON.parse(stripJSONC(text)), JSON.parse(json));
     }),
+  );
+});
+
+test("should give the same output as the 0.2.0 regex whenever it is valid JSON", () => {
+  // Characters that matter to strings, comments and commas, with every line terminator
+  const unit = fc.constantFrom(...'"\\/*,[]{}: \n\r\t\u2028\u2029a1');
+  fc.assert(
+    fc.property(fc.string({ unit, maxLength: 20 }), (text) => {
+      // A backslash before a line terminator is an invalid escape. The regex no longer sees
+      // a string there and may strip comment-like content inside it, which the scanner keeps.
+      if (/\\[\n\r\u2028\u2029]/.test(text)) return;
+      const expected = stripJSONCWithRegex(text);
+      try {
+        JSON.parse(expected);
+      } catch {
+        // Both are invalid JSON, typically on an unterminated string
+        return;
+      }
+      assert.equal(stripJSONC(text), expected);
+    }),
+    { numRuns: 10000 },
   );
 });

@@ -64,7 +64,9 @@ The plugin only applies to JSON bodies: `application/json`, with or without para
 
 ## How it works
 
-A request hook strips comments with a regular expression adapted from [`json-easy-strip`](https://www.npmjs.com/package/json-easy-strip), then removes trailing commas. The body is not parsed and serialized again, so its formatting is preserved.
+A request hook scans the body once, character by character, jumping over strings and comments. It removes comments and trailing commas, and copies the rest as is: the body is not parsed and serialized again, so its formatting is preserved. A body with nothing to strip is returned untouched.
+
+See [`bench/`](bench/README.md) for a comparison with a regular expression, another scanner and [`strip-json-comments`](https://github.com/sindresorhus/strip-json-comments).
 
 ## License
 

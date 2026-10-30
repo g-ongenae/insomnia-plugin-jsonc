@@ -26,7 +26,8 @@
   "scripts": {
     "test": "node --test test.js",
     "prepublishOnly": "npm test",
-    "format": "npx prettier@3 --write ."
+    "format": "npx prettier@3 --write .",
+    "bench": "node --expose-gc bench/bench.js"
   },
   "repository": {
     "type": "git",
@@ -46,6 +47,7 @@
   },
   "homepage": "https://github.com/g-ongenae/insomnia-plugin-jsonc#readme",
   "devDependencies": {
-    "fast-check": "^4.10.2"
+    "fast-check": "^4.10.2",
+    "strip-json-comments": "^5.0.3"
   }
 }
