@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-jsonc",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Write // and /* */ comments in JSON request bodies in Insomnia",
   "main": "main.js",
   "files": [
