@@ -11,7 +11,7 @@
   ],
   "insomnia": {
     "name": "jsonc",
-    "displayName": "JSON Comments Plugin",
+    "displayName": "JSON Comments & Trailing Commas",
     "description": "Strips comments from JSON request bodies.",
     "images": {
       "icon": "icon.svg",

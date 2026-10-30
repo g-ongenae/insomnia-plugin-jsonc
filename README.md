@@ -4,7 +4,7 @@ Write comments and trailing commas in your JSON request bodies. They are strippe
 
 - **The original**: published on npm in January 2022, before the other JSON comments plugins for Insomnia.
 - **The fastest**: 3 to 10 times faster than [`strip-json-comments`](https://github.com/sindresorhus/strip-json-comments), and up to 20 times faster on large bodies than the regular expression other plugins use. See [`bench/`](bench/README.md).
-- **Safe**: no runtime dependencies and no network access. The body is scanned in linear time, even on malformed input, and is never evaluated.
+- **Unbreakable**: handles the cases other implementations get wrong, such as a string ending with an escaped backslash (`"C:\\dir\\"`) or a line comment ended by a lone `\r`. Strings are never altered, empty and malformed bodies never make it throw, and the body is scanned in linear time, even on malformed input. No runtime dependencies, no network access.
 
 ## Example
 
