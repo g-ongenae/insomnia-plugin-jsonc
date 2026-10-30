@@ -5,9 +5,15 @@
  */
 const { execFileSync } = require("node:child_process");
 
+// ESM only, loaded with `require` (Node >= 22.12)
+const { default: stripJsonComments } = require("strip-json-comments");
+
 const implementations = {
   regex: require("./regex").stripJSONC,
   "scanner (fadlan)": require("./scanner-fadlan").stripJSONC,
+  // Options matching the plugin: trailing commas removed, comments not replaced by spaces
+  "strip-json-comments": (text) =>
+    stripJsonComments(text, { trailingCommas: true, whitespace: false }),
   "scanner (strip.js)": require("../strip").stripJSONC,
 };
 
@@ -78,6 +84,8 @@ console.log("## Correctness: does the output parse?\n");
 const correctness = {
   ...fixtures,
   "JSONC with escaped backslashes (~2 KB)": jsonc(10, true),
+  "line comment ended by a lone \\r": "[1, // c\r2]",
+  "trailing comma before a comment": "[1, // c\n]",
 };
 for (const [fixture, text] of Object.entries(correctness)) {
   const results = names.map((name) => {
