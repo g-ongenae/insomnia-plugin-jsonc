@@ -17,36 +17,42 @@ Node v24.21.0, darwin/arm64 (Apple Silicon). Each case runs for 1 s after a warm
 
 ### Speed
 
-| Input                             | regex   | scanner (fadlan) | strip-json-comments | scanner (strip.js) |
-| --------------------------------- | ------- | ---------------- | ------------------- | ------------------ |
-| Typical request (~150 B)          | 1.04 µs | 0.33 µs          | 0.83 µs             | **0.24 µs**        |
-| JSONC (~2 KB)                     | 18.9 µs | 9.9 µs           | 23.3 µs             | **4.7 µs**         |
-| JSONC (~200 KB)                   | 2.03 ms | 1.06 ms          | 2.39 ms             | **0.48 ms**        |
-| JSONC (~2 MB)                     | 22.4 ms | 15.1 ms          | 27.5 ms             | **5.1 ms**         |
-| Plain JSON, no comments (~1.4 MB) | 12.6 ms | 13.2 ms          | 20.2 ms             | **2.6 ms**         |
-| One long string (1 MB)            | 2.1 ms  | 12.2 ms          | 3.1 ms              | **0.016 ms**       |
+| Input                                              | regex   | scanner (fadlan) | strip-json-comments | scanner (strip.js) |
+| -------------------------------------------------- | ------- | ---------------- | ------------------- | ------------------ |
+| Typical request (~150 B)                           | 1.03 µs | 0.34 µs          | 0.87 µs             | **0.26 µs**        |
+| JSONC (~2 KB)                                      | 19.0 µs | 9.9 µs           | 23.9 µs             | **5.0 µs**         |
+| JSONC (~200 KB)                                    | 2.10 ms | 1.05 ms          | 2.49 ms             | **0.49 ms**        |
+| JSONC (~2 MB)                                      | 21.7 ms | 14.1 ms          | 27.5 ms             | **5.5 ms**         |
+| Plain JSON, no comments (~1.4 MB)                  | 13.0 ms | 12.5 ms          | 19.9 ms             | **2.7 ms**         |
+| One long string (1 MB)                             | 2.3 ms  | 12.4 ms          | 3.1 ms              | **0.017 ms**       |
+| Data export (~50 MB, a comment every 1000 records) | 1.12 s  | 1.60 s           | 0.55 s              | **0.058 s**        |
+| Comment-heavy JSONC (~50 MB)                       | 1.04 s  | 1.33 s           | 0.89 s              | **0.19 s**         |
 
-All four use a single core. The regex goes above 100% CPU on large bodies because of the background garbage collector.
+All four use a single core. Above 100% CPU, the background garbage collector is working too: the regex and the fadlan scanner allocate the most.
 
 `strip-json-comments` reads the body one character at a time, strings included, and only slices out kept text. That avoids the fadlan scanner's memory cost, but each character still goes through several comparisons.
 
 ### Memory
 
-Heap kept per result for the ~2 MB JSONC body (1.78 MB input), each implementation in its own process:
+Extra peak memory (RSS) of one call, each implementation and body in its own process:
 
-| regex   | scanner (fadlan) | strip-json-comments | scanner (strip.js) |
-| ------- | ---------------- | ------------------- | ------------------ |
-| 1.59 MB | 49.21 MB         | 9.20 MB             | **1.51 MB**        |
+| Input                        | regex   | scanner (fadlan) | strip-json-comments | scanner (strip.js) |
+| ---------------------------- | ------- | ---------------- | ------------------- | ------------------ |
+| JSONC (~2 MB)                | 62 MB   | 54 MB            | 37 MB               | **10 MB**          |
+| Data export (~50 MB)         | 1549 MB | 1762 MB          | 432 MB              | **105 MB**         |
+| Comment-heavy JSONC (~50 MB) | 1718 MB | 1602 MB          | 489 MB              | **291 MB**         |
 
-The fadlan scanner appends one character at a time, and `strip-json-comments` appends one slice per comment and comma. Both leave a chain of small strings instead of one flat string.
+The regex builds a string per match and an intermediate string between its two passes. The fadlan scanner appends one character at a time, and `strip-json-comments` one slice per comment and comma, which leaves chains of small strings. `strip.js` keeps one slice per removed comment or comma, so its memory grows with the number of comments rather than with the size of the body.
 
 ### Adversarial inputs
 
+Time of one call:
+
 | Input                                       | regex  | scanner (fadlan) | strip-json-comments | scanner (strip.js) |
 | ------------------------------------------- | ------ | ---------------- | ------------------- | ------------------ |
-| Unterminated block comments (`"/* "` × 20k) | 149 ms | 0.1 ms           | 0.7 ms              | 0.3 ms             |
-| Unterminated string (1 MB)                  | 3.8 ms | 14.7 ms          | 5.4 ms              | 0.0 ms             |
-| Comma and 1 MB of whitespace                | 0.5 ms | 18.3 ms          | 20.8 ms             | 2.4 ms             |
+| Unterminated block comments (`"/* "` × 20k) | 149 ms | 0.1 ms           | 0.8 ms              | 0.3 ms             |
+| Unterminated string (1 MB)                  | 5.0 ms | 59.4 ms          | 5.6 ms              | 0.0 ms             |
+| Comma and 1 MB of whitespace                | 0.7 ms | 8.7 ms           | 23.5 ms             | 2.3 ms             |
 
 The regex is quadratic on unterminated block comments: each `/*` is searched until the end of the body.
 

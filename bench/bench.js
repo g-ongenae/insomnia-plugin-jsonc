@@ -38,6 +38,29 @@ const json = (n) =>
     2,
   );
 
+/**
+ * Exported payload of about `size` bytes: one record per line, a comment every 1000 records
+ *
+ * Built with `repeat`, so that building it leaves no garbage to skew memory measures.
+ */
+const dataExport = (size) => {
+  const record = (i) =>
+    `  ${JSON.stringify({ id: i, uuid: `5f1c${i}-aa21-4c1e-9b1a`, email: `user${i}@example.com`, url: `https://api.example.com/v1/users/${i}`, createdAt: "2026-10-30T12:00:00Z", tags: ["a", "b"], score: i * 1.5 })},\n`;
+  const block = `  // batch\n${Array.from({ length: 1000 }, (_, i) => record(i)).join("")}`;
+  return `/* export */\n[\n${block.repeat(Math.round(size / block.length))}]`;
+};
+/** Comment-heavy JSONC of about `size` bytes, built with `repeat` */
+const commentHeavy = (size) => {
+  const block = `${item(0)}\n`;
+  return `[\n${block.repeat(Math.round(size / block.length))}{}]`;
+};
+
+/** Bodies of tens of MB, measured on fewer cases since a single call takes up to a second */
+const largeFixtures = {
+  "data export (~50 MB)": () => dataExport(50e6),
+  "comment-heavy JSONC (~50 MB)": () => commentHeavy(50e6),
+};
+
 const fixtures = {
   "typical request (~150 B)":
     '{\n  // user\n  "name": "bob", /* id */ "id": 1,\n  "tags": ["a",],\n}',
@@ -54,19 +77,22 @@ const adversarial = {
   "comma and 1 MB of whitespace": `[1,${" ".repeat(1 << 20)}]`,
 };
 
-const large = fixtures["JSONC (~2 MB)"];
+const memoryFixtures = {
+  "JSONC (~2 MB)": () => jsonc(10000),
+  ...largeFixtures,
+};
 
 // Measured in a child process, so that garbage from other implementations does not interfere
 if (process.argv[2] === "--memory") {
-  const strip = implementations[process.argv[3]];
+  const [, , , fixture, name] = process.argv;
+  const text = memoryFixtures[fixture]();
   global.gc();
-  const before = process.memoryUsage().heapUsed;
-  const results = Array.from({ length: 20 }, () => strip(large));
-  global.gc();
-  const retained = (process.memoryUsage().heapUsed - before) / results.length;
-  console.log(
-    `${(retained / 1e6).toFixed(2)} MB (input ${(large.length / 1e6).toFixed(2)} MB)`,
-  );
+  const before = process.memoryUsage().rss;
+  const result = implementations[name](text);
+  result.charCodeAt(result.length >> 1); // flatten the result, as sending it would
+  // maxRSS is in KiB
+  const peak = process.resourceUsage().maxRSS * 1024 - before;
+  console.log(`${(peak / 1e6).toFixed(0)} MB`);
   process.exit(0);
 }
 
@@ -100,11 +126,24 @@ for (const [fixture, text] of Object.entries(correctness)) {
 }
 
 console.log("\n## Throughput (1 s per case, after warmup)\n");
-for (const [fixture, text] of Object.entries(fixtures)) {
+const throughputFixtures = {
+  ...fixtures,
+  ...Object.fromEntries(
+    Object.entries(largeFixtures).map(([fixture, build]) => [fixture, build()]),
+  ),
+};
+for (const [fixture, text] of Object.entries(throughputFixtures)) {
   console.log(`${fixture}`);
   for (const name of names) {
     const strip = implementations[name];
-    for (let i = 0; i < 20; i++) strip(text);
+    // Up to 20 warmup calls, within 1 s for large bodies
+    const warmup = process.hrtime.bigint();
+    for (
+      let i = 0;
+      i < 20 && process.hrtime.bigint() - warmup < 1_000_000_000n;
+      i++
+    )
+      strip(text);
     let iterations = 0;
     const cpu = process.cpuUsage();
     const ms = time(() => {
@@ -116,24 +155,36 @@ for (const [fixture, text] of Object.entries(fixtures)) {
     });
     const { user, system } = process.cpuUsage(cpu);
     const perOp = (ms * 1000) / iterations;
+    const perOpText =
+      perOp < 1000
+        ? `${perOp.toFixed(2)} µs`
+        : `${(perOp / 1000).toFixed(2)} ms`;
     const mbPerSecond = (text.length * iterations) / 1e3 / ms;
     const cpuPercent = ((user + system) / 1000 / ms) * 100;
     console.log(
-      `  ${name.padEnd(pad)} ${perOp.toFixed(2).padStart(10)} µs/op ${mbPerSecond.toFixed(0).padStart(7)} MB/s  CPU ${cpuPercent.toFixed(0)}%`,
+      `  ${name.padEnd(pad)} ${perOpText.padStart(11)}/op ${mbPerSecond.toFixed(0).padStart(7)} MB/s  CPU ${cpuPercent.toFixed(0)}%`,
     );
   }
 }
 
 console.log(
-  "\n## Memory: heap retained per result (JSONC ~2 MB, 20 results kept, one process each)\n",
+  "\n## Memory: extra peak memory (RSS) of one call, one process each\n",
 );
-for (const name of names) {
-  const output = execFileSync(
-    process.execPath,
-    ["--expose-gc", __filename, "--memory", name],
-    { encoding: "utf8" },
-  );
-  console.log(`  ${name.padEnd(pad)} ${output.trim()}`);
+for (const fixture of Object.keys(memoryFixtures)) {
+  console.log(`${fixture}`);
+  for (const name of names) {
+    let output;
+    try {
+      output = execFileSync(
+        process.execPath,
+        ["--expose-gc", __filename, "--memory", fixture, name],
+        { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+      ).trim();
+    } catch {
+      output = "out of memory";
+    }
+    console.log(`  ${name.padEnd(pad)} ${output}`);
+  }
 }
 
 console.log("\n## Adversarial inputs: time of one call\n");
